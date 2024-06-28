@@ -1,3 +1,4 @@
+import axios from 'axios';
 import './InvoiceTable.css';
 import React, { useState } from 'react'
 import InvoiceTableHeader from './InvoiceTableHeader';
@@ -14,24 +15,24 @@ function InvoiceTable() {
   ])
 
   
-  const addInvoiceRow = () => {
-    const newInvoiceList = [...initialInvoiceData, {
-      id:generateId(),
-      description:'Description',
-      rate:'',
-      hours:'',
-      isEditing:true
-    }]
-    setInitialInvoiceData(newInvoiceList)
+  const addInvoiceRow = async () => {
+    const { data } = await axios.post('/api/invoice', { description: 'Description' });
+
+    const newInvoice = {...data, isEditing: true };
+    setInitialInvoiceData([...initialInvoiceData, newInvoice]);
   }
   
-  const deleteInvoiceRow = (id) => {
-    const newInvoiceListCopy = [...initialInvoiceData]
-    const newInvoiceList = newInvoiceListCopy.filter(invoiceItem => {
-      return invoiceItem.id !== +id
-    })
-    setInitialInvoiceData(newInvoiceList)
-  }
+  const deleteInvoiceRow = async (id) => {
+    const {data} = await axios.delete(`/api/invoice/${id}/delete`)
+
+    if (!data.error) {
+      const newInvoiceListCopy = [...initialInvoiceData]
+      const newInvoiceList = newInvoiceListCopy.filter(invoiceItem => {
+        return invoiceItem.id !== +id
+      })
+      setInitialInvoiceData(newInvoiceList)
+    }
+  };
   
   const rows = initialInvoiceData.map(invoiceItem => {
     const {id, description, rate, hours} = invoiceItem
@@ -39,7 +40,7 @@ function InvoiceTable() {
     return (
       <InvoiceTableRow 
       key={id} 
-      initialInvoiceData={{description, hours, rate}} 
+      initialInvoiceData={{id, description, hours, rate}} 
       initialIsEditing={false}
       onDeleteRow={() => deleteInvoiceRow(id)}
       />
